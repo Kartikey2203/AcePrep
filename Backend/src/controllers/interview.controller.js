@@ -4,17 +4,8 @@ const InterviewReportModel = require("../models/interviewReport.model");
 
 async function generateInterviewReport(req, res) {
   try {
-    // Try multiple pdfjs versions — malformed PDFs (bad XRef) often parse with a different version
-    const pdfVersions = ['v2.0.550', 'v1.10.100', 'v1.10.88', 'v1.9.426'];
-    let resumeData = null;
-    for (const version of pdfVersions) {
-      try {
-        resumeData = await pdfParse(req.file.buffer, { version });
-        break;
-      } catch (e) {
-        if (version === pdfVersions[pdfVersions.length - 1]) throw e;
-      }
-    }
+    const resumeFile = req.file;
+    const resumeData = await pdfParse(new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText();
     const resumeContent = resumeData.text;
     const selfDescription = req.body.selfDescription;
     const jobDescription = req.body.jobDescription;
@@ -34,12 +25,13 @@ async function generateInterviewReport(req, res) {
     });
 
     res.status(201).json({
-      message: "Interview report generated successfully.",
-      interviewReport,
+      success: true,
+      message: "Interview report generated successfully",
+      data: interviewReport,
     });
   } catch (error) {
     console.error("Interview report error:", error);
-    res.status(500).json({ success: false, message: error.message || "Failed to generate report" });
+    res.status(500).json({ success: false, message: "Failed to generate report" });
   }
 }
 

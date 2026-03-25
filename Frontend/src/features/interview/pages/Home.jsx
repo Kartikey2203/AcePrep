@@ -50,10 +50,18 @@ const Home = () => {
         </div>
 
         <button type="submit" className="generate-btn">
-          ✨ Generate Interview Report
+          Generate Interview Report
         </button>
 
       </div>
+
+      <footer className="site-footer">
+        <span className="footer-brand">AcePrep</span>
+        <span className="footer-sep">·</span>
+        <span>Powered by AI</span>
+        <span className="footer-sep">·</span>
+        <span>© {new Date().getFullYear()}</span>
+      </footer>
     </main>
   )
 }
