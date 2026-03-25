@@ -12,9 +12,11 @@ app.use(cors({
 
 //  reuire all routes here
 const authRoutes=require("./routes/auth.routes")
+const interviewRoutes=require("./routes/interview.routes")
 
 //  use all routes here
 app.use("/api/auth",authRoutes)
+app.use("/api/interview",interviewRoutes)
 
 
 module.exports = app;

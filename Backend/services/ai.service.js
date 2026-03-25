@@ -1,82 +1,103 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const {z} = require("zod");
-const {zodToJsonSchema} = require("zod-to-json-schema");
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
-
-async function invokeGeminiAi(){
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-    const result = await model.generateContent("Hello, What is the capital of France?");
-    const response = result.response;
-    const text = response.text();
-    console.log(text);
-}
-
-const interviewReportSchema = z.object({
-    technicalQuestions:z.array(z.object({
-        question:z.string().describe("Technical question"),
-        intention:z.string().describe("Intention of the technical question"),
-      answer:z.string().describe("How to answer the technical question, what to include and what to avoid"),
-    })).describe("Technical questions based on the job description and resume"),
+const { GoogleGenAI } = require("@google/genai")
 
 
-    behavioralQuestions:z.array(z.object({  
-        question:z.string().describe("Behavioral question"),
-        intention:z.string().describe("Intention of the behavioral question"),
-        answer:z.string().describe("How to answer the behavioral question, what to include and what to avoid"),
-    })).describe("Behavioral questions based on the job description and resume"),
-    
+const ai = new GoogleGenAI({
+    apiKey: process.env.GOOGLE_GENAI_API_KEY
+})
 
-    skillGapAnalysis:z.object({
-        skill:z.string().describe("Skill which are lacking in the resume"),
-        severity:z.enum(["low","medium","high"]).describe("Severity of the skill gap"),
-        
-    }).describe("Skill gap analysis based on the job description and resume"),
 
-preparationPlanSchema:z.object({
-    day:z.number().describe("Day of the preparation plan"),
-    topic:z.string().describe("Topic to prepare"),
-    duration:z.string().describe("Duration to prepare the topic"),
-    resources:z.array(z.string()).describe("Resources to prepare the topic"),
-}).describe("Preparation plan based on the job description and resume"),
-});
 
-async function generateInterviewReport(resume,selfDescription,jobDescription){
-    
-    const prompt = `
-    You are an expert career coach and interview preparation assistant.
-    Your task is to analyze the provided resume and self-description against the job description and generate a comprehensive interview preparation report.
-    
-    Resume: ${resume}
-    Self-Description: ${selfDescription}
-    Job Description: ${jobDescription}
-    
-    Please provide the response in the following JSON format:
-    ${JSON.stringify(zodToJsonSchema(interviewReportSchema))}
-    `
-    const responce = await model.generateContent({
-        model:"gemini-3-flash-preview",
-        contents:[
-            {
-                role:"user",
-                parts:[
-                    {
-                        text:prompt
-                    }
-                ]
-            }
-        ],
-        config:{
-            responseMimeType:"application/json",
-            responseSchema:{
-                jsonSchema:zodToJsonSchema(interviewReportSchema)
+
+async function callWithRetry(fn, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            return await fn();
+        } catch (err) {
+            const is429 = err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED");
+            if (is429 && attempt < retries) {
+                // Parse retryDelay from error message e.g. "Please retry in 18.9s"
+                const match = err.message?.match(/retry in (\d+(\.\d+)?)/i);
+                const waitMs = match ? Math.ceil(parseFloat(match[1])) * 1000 : 20000;
+                console.log(`Rate limited. Retrying in ${waitMs / 1000}s (attempt ${attempt}/${retries})...`);
+                await new Promise(r => setTimeout(r, waitMs));
+            } else {
+                throw err;
             }
         }
-    })
+    }
 }
 
-module.exports = {
-    invokeGeminiAi
+async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+
+    const prompt = `You are an expert interview coach and career advisor. Analyze the following candidate profile and job description, then generate a comprehensive interview preparation report.
+
+CANDIDATE RESUME:
+${resume}
+
+CANDIDATE SELF-DESCRIPTION:
+${selfDescription}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+Generate a detailed JSON report with ALL of the following fields filled out completely. Do NOT leave any array empty.
+
+Return ONLY a valid JSON object with this EXACT structure:
+{
+  "title": "<job title from job description>",
+  "matchScore": <number 0-100 indicating how well the candidate matches the job>,
+  "technicalQuestions": [
+    {
+      "question": "<specific technical question based on job requirements and candidate background>",
+      "intention": "<why an interviewer would ask this question>",
+      "answer": "<detailed guide on how to answer this question with key points to cover>"
+    }
+  ],
+  "behavioralQuestions": [
+    {
+      "question": "<behavioral question using STAR method topics>",
+      "intention": "<why an interviewer would ask this question>",
+      "answer": "<how to structure and answer this using the STAR method with specific examples>"
+    }
+  ],
+  "skillGaps": [
+    {
+      "skill": "<skill the candidate is missing or weak in based on job requirements>",
+      "severity": "<low|medium|high>"
+    }
+  ],
+  "preparationPlan": [
+    {
+      "day": <day number starting from 1>,
+      "focus": "<main topic to focus on this day>",
+      "tasks": ["<specific task 1>", "<specific task 2>", "<specific task 3>"]
+    }
+  ]
 }
+
+REQUIREMENTS:
+- technicalQuestions: generate at least 5 questions specific to the job requirements
+- behavioralQuestions: generate at least 3 questions
+- skillGaps: identify at least 2-3 gaps comparing resume to job requirements  
+- preparationPlan: create a 7-day preparation plan
+- matchScore: be honest and precise based on skill alignment
+- All answers must be detailed and actionable, not generic
+
+Return ONLY the JSON, no markdown, no explanation.`
+
+    const response = await callWithRetry(() => ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+        }
+    }));
+
+    const text = response.text;
+    if (!text) throw new Error("Empty response from Gemini AI");
+    return JSON.parse(text);
+}
+module.exports = { generateInterviewReport}
 
 // async function generateContent(prompt) {
 //     const result = await model.generateContent(prompt);
