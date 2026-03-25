@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.home {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+
+    // Background image
+    background-image: url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+
+    // Dark overlay so box stands out
+    &::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 10, 15, 0.65);
+        backdrop-filter: blur(1px);
+        z-index: 0;
+    }
+
+    // ── Glassmorphism Card Box ─────────────────────────────
+    .card {
+        position: relative;
+        z-index: 1;
+        width: 90%;
+        max-width: 900px;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 40px 44px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 36px;
+
+            h1 {
+                font-size: 1.9rem;
+                font-weight: 700;
+                color: #ffffff;
+                letter-spacing: -0.5px;
+                margin-bottom: 8px;
+
+                span {
+                    background: linear-gradient(90deg, #818cf8, #c084fc);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+            }
+
+            p {
+                font-size: 0.85rem;
+                color: rgba(255, 255, 255, 0.42);
+            }
+        }
+
+        // ── Two column grid inside card ────────────────────
+        .fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+
+            // Job description spans full height on left
+            .field-job {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                height: 100%;
+
+                textarea {
+                    flex: 1;
+                    min-height: 260px;
+                }
+            }
+
+            // Right column stacks resume + self desc
+            .field-right {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        // ── Input Group ────────────────────────────────────
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            label {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: rgba(200, 198, 255, 0.65);
+                letter-spacing: 0.6px;
+                text-transform: uppercase;
+            }
+
+            // File upload zone
+            .file-zone {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1.5px dashed rgba(129, 140, 248, 0.4);
+                border-radius: 12px;
+                padding: 18px 20px;
+                cursor: pointer;
+                transition: border-color 0.2s, background 0.2s;
+
+                &:hover {
+                    border-color: rgba(129, 140, 248, 0.75);
+                    background: rgba(99, 102, 241, 0.07);
+                }
+
+                .zone-text {
+                    span:first-child {
+                        display: block;
+                        font-size: 0.87rem;
+                        color: rgba(255,255,255,0.75);
+                        font-weight: 500;
+                    }
+                    span:last-child {
+                        display: block;
+                        font-size: 0.73rem;
+                        color: rgba(255,255,255,0.3);
+                        margin-top: 2px;
+                    }
+                }
+
+                input[type="file"] {
+                    position: absolute;
+                    inset: 0;
+                    opacity: 0;
+                    cursor: pointer;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            textarea {
+                width: 100%;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 14px 16px;
+                color: rgba(255, 255, 255, 0.85);
+                font-family: 'Inter', sans-serif;
+                font-size: 0.87rem;
+                line-height: 1.65;
+                resize: none;
+                outline: none;
+                min-height: 110px;
+                transition: border-color 0.2s, box-shadow 0.2s;
+
+                &::placeholder { color: rgba(255,255,255,0.2); }
+
+                &:focus {
+                    border-color: rgba(99, 102, 241, 0.55);
+                    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+                }
+            }
+        }
+
+        // ── Generate Button ────────────────────────────────
+        .generate-btn {
+            margin-top: 28px;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(99, 102, 241, 0.45);
+            }
+
+            &:active { transform: translateY(0); }
+        }
+    }
+}
