@@ -47,6 +47,7 @@ interviewRouter.get(
   "/resume/pdf/:interviewReportId",
   authMiddleware,
   interviewController.generateResumePDF
+  m
 );
 
 module.exports = interviewRouter;
