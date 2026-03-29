@@ -8,17 +8,24 @@ export const AuthProvider = ({children}) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const res = await getme();
-            if (res && res.user) {
-                setUser(res.user);
-            } else if (res && res.data) {
-                setUser(res.data);
-            } else if (res) {
-                setUser(res);
-            } else {
+            try {
+                const res = await getme();
+                console.log("Auth fetch result:", res);
+                if (res && res.user) {
+                    setUser(res.user);
+                } else if (res && res.data) {
+                    setUser(res.data);
+                } else if (res) {
+                    setUser(res);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user:", error);
                 setUser(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
         fetchUser();
     }, []);

@@ -37,15 +37,21 @@ async function registerUserController(req,res){
     const token=jwt.sign({id:user._id,username:user.username},
         process.env.JWT_SECRET,
         {expiresIn:"1d"})
-        res.cookie("token",token,{httpOnly:true,secure:true,maxAge:3600000})
+    
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie("token",token,{
+        httpOnly:true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge:3600000
+    })
 
-
-        res.status(201).json({message:"User registered successfully",
-            user:{
-                id:user._id,
-                username:user.username,
-                email:user.email
-            }})
+    res.status(201).json({message:"User registered successfully",
+        user:{
+            id:user._id,
+            username:user.username,
+            email:user.email
+        }})
 }
 
 
@@ -60,8 +66,18 @@ async function loginUserController(req,res){
     if((!username && !email) || !password){
         return res.status(400).json({message:"Email or username and password are required"})
     }
-    const user=await userModel.findOne({
-        $or:[{username},{email}]
+    const queryConditions = [];
+    if (email) {
+        queryConditions.push({ email: email });
+        queryConditions.push({ username: email });
+    }
+    if (username) {
+        queryConditions.push({ username: username });
+        queryConditions.push({ email: username });
+    }
+
+    const user = await userModel.findOne({
+        $or: queryConditions
     })
     if(!user){
         return res.status(400).json({message:"User not found"})
@@ -73,13 +89,21 @@ async function loginUserController(req,res){
     const token=jwt.sign({id:user._id,username:user.username},
         process.env.JWT_SECRET,
         {expiresIn:"1d"})
-        res.cookie("token",token,{httpOnly:true,secure:true,maxAge:3600000})
-        res.status(200).json({message:"User logged in successfully",
-            user:{
-                id:user._id,
-                username:user.username,
-                email:user.email
-            }})
+    
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie("token",token,{
+        httpOnly:true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge:3600000
+    })
+    
+    res.status(200).json({message:"User logged in successfully",
+        user:{
+            id:user._id,
+            username:user.username,
+            email:user.email
+        }})
 }
 
 /**

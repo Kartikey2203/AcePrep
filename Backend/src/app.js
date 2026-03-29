@@ -5,8 +5,20 @@ const cors = require("cors");
 
 app.use(express.json());
 app.use(cookieParser())
+
+// Allow CORS from any localhost port for development
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Allow localhost on any port
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            return callback(null, true);
+        }
+        
+        callback(new Error('CORS not allowed'));
+    },
     credentials: true
 }));
 

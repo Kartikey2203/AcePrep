@@ -1,6 +1,6 @@
 const { GoogleGenAI } = require("@google/genai")
-
-
+const puppeteer = require("puppeteer")
+const { z } = require("zod")
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 })
@@ -14,11 +14,12 @@ async function callWithRetry(fn, retries = 3) {
             return await fn();
         } catch (err) {
             const is429 = err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED");
-            if (is429 && attempt < retries) {
+            const is503 = err?.status === 503 || err?.message?.toLowerCase().includes("unavailable") || err?.message?.toLowerCase().includes("high demand");
+            if ((is429 || is503) && attempt < retries) {
                 // Parse retryDelay from error message e.g. "Please retry in 18.9s"
                 const match = err.message?.match(/retry in (\d+(\.\d+)?)/i);
                 const waitMs = match ? Math.ceil(parseFloat(match[1])) * 1000 : 20000;
-                console.log(`Rate limited. Retrying in ${waitMs / 1000}s (attempt ${attempt}/${retries})...`);
+                console.log(`Rate limited/unavailable. Retrying in ${waitMs / 1000}s (attempt ${attempt}/${retries})...`);
                 await new Promise(r => setTimeout(r, waitMs));
             } else {
                 throw err;
@@ -27,13 +28,11 @@ async function callWithRetry(fn, retries = 3) {
     }
 }
 
-async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+async function generateInterviewReport({ resume, resumeBuffer, resumeMimeType, selfDescription, jobDescription }) {
 
-    const prompt = `You are an expert interview coach and career advisor. Analyze the following candidate profile and job description, then generate a comprehensive interview preparation report.
+    const promptText = `You are an expert interview coach and career advisor. Analyze the following candidate profile and job description, then generate a comprehensive interview preparation report.
 
-CANDIDATE RESUME:
-${resume}
-
+${resume ? `CANDIDATE RESUME:\n${resume}\n` : `(A candidate resume document is attached to this prompt.)\n`}
 CANDIDATE SELF-DESCRIPTION:
 ${selfDescription}
 
@@ -72,7 +71,8 @@ Return ONLY a valid JSON object with this EXACT structure:
       "focus": "<main topic to focus on this day>",
       "tasks": ["<specific task 1>", "<specific task 2>", "<specific task 3>"]
     }
-  ]
+  ],
+  title:z.string().describe("title of the interview report")
 }
 
 REQUIREMENTS:
@@ -85,9 +85,23 @@ REQUIREMENTS:
 
 Return ONLY the JSON, no markdown, no explanation.`
 
+    let requestContents = promptText;
+    
+    if (resumeBuffer && resumeMimeType) {
+        requestContents = [
+            {
+                inlineData: {
+                    data: resumeBuffer.toString("base64"),
+                    mimeType: resumeMimeType
+                }
+            },
+            { text: promptText }
+        ];
+    }
+
     const response = await callWithRetry(() => ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: prompt,
+        contents: requestContents,
         config: {
             responseMimeType: "application/json",
         }
@@ -97,7 +111,60 @@ Return ONLY the JSON, no markdown, no explanation.`
     if (!text) throw new Error("Empty response from Gemini AI");
     return JSON.parse(text);
 }
-module.exports = { generateInterviewReport}
+
+async function generatePdfFromHtml(htmlContent){
+    
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    await page.setContent(htmlContent);
+    const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+    });
+    await browser.close();
+    return pdf;
+}
+
+async function generateResumePDF(resume,selfDescription,jobDescription){
+    
+  const resumepdfSchema = z.object({ 
+    html: z.string().describe("the html content of the resume which can be converted to pdf using puppeteer") 
+  })
+
+  const promptText = `Generate a resume in HTML format based on the following information:
+
+${resume ? `CANDIDATE RESUME:\n${resume}\n` : `(A candidate resume document is attached to this prompt.)\n`}
+CANDIDATE SELF-DESCRIPTION:
+${selfDescription}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+the responce should be in the JSON object with the single field "html" and the value should be the html content of the resume.
+
+Return ONLY the JSON, no markdown, no explanation.`
+
+const response = await callWithRetry(() => ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: promptText,
+    config: {
+        responseMimeType: "application/json",
+    }
+}));
+
+const text = response.text;
+if (!text) throw new Error("Empty response from Gemini AI");
+const jsonContent =JSON.parse(text);
+const pdfBuffer = await generatePdfFromHtml(jsonContent.html);
+return pdfBuffer;
+
+}
+
+module.exports = { generateInterviewReport, generateResumePDF}
 
 // async function generateContent(prompt) {
 //     const result = await model.generateContent(prompt);
