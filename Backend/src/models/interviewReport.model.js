@@ -97,6 +97,11 @@ const interviewReportSchema = new mongoose.Schema({
         min:0,
         max:100
     },
+    atsScore:{
+        type: Number,
+        min:0,
+        max:100
+    },
     title:{
         type:String,
         required: [true, "Title is required"]

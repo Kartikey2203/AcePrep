@@ -55,3 +55,11 @@ export const getAllInterviewReports = async () => {
     const response = await api.get("/interview/");
     return response.data;
 }
+
+/*
+*@description:Generate resume pdf
+*/
+export const generateResumePDF = async (id) => {
+    const response = await api.post(`/interview/resume/pdf/${id}`, {}, { responseType: 'blob' });
+    return response.data;
+}

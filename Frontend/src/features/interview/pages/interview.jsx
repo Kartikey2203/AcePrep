@@ -40,7 +40,7 @@ const Interview = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [contentKey, setContentKey] = useState(0);
   const cardRefs = useRef({});
-  const {report, getReportById, loading} = useInterview();
+  const {report, getReportById, loading, generateResumePDF} = useInterview();
   
   // Fetch report from backend when page loads or interviewId changes
   useEffect(() => {
@@ -143,19 +143,32 @@ const Interview = () => {
       <div className="interview-grid">
         {/* LEFT — Sidebar */}
         <aside className="survey-sidebar glass-panel">
-          <h3 className="panel-label">Sections</h3>
-          <ul>
-            {sections.map((section) => (
-              <li
-                key={section.key}
-                onClick={() => handleSectionChange(section.key)}
-                className={activeSection === section.key ? 'active' : ''}
-              >
-                <span className="nav-icon">{section.icon}</span>
-                <span className="nav-label">{section.label}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="sidebar-top">
+            <h3 className="panel-label">Sections</h3>
+            <ul>
+              {sections.map((section) => (
+                <li
+                  key={section.key}
+                  onClick={() => handleSectionChange(section.key)}
+                  className={activeSection === section.key ? 'active' : ''}
+                >
+                  <span className="nav-icon">{section.icon}</span>
+                  <span className="nav-label">{section.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="sidebar-bottom">
+            <button 
+              className="generate-resume-btn"
+              onClick={() => generateResumePDF(interviewId)}
+              disabled={loading}
+            >
+              <span className="btn-icon">✦</span>
+              {loading ? 'Generating...' : 'AI Generated Resume'}
+            </button>
+          </div>
         </aside>
 
         {/* CENTER — Main content */}
@@ -195,6 +208,27 @@ const Interview = () => {
               </div>
             </div>
             <p className="score-label">Strong match for this role</p>
+          </div>
+
+          <div className="panel-card match-card">
+            <h3 className="panel-label">ATS Score</h3>
+            <div className="score-ring-wrapper">
+              <div
+                className="score-ring"
+                style={{
+                  background: `conic-gradient(#00a69c 0 ${report?.atsScore || 0}%, rgba(255,255,255,0.08) ${report?.atsScore || 0}% 100%)`,
+                  boxShadow: '0 0 24px rgba(0, 166, 156, 0.4)'
+                }}
+              >
+                <div className="ring-inner">
+                  <span className="score-number">
+                    {report?.atsScore || 0}
+                    <em>%</em>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="score-label" style={{ color: '#00a69c' }}>Resume ATS Compatibility</p>
           </div>
 
           <div className="panel-card gaps-card">
