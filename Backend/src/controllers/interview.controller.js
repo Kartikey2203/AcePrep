@@ -131,12 +131,12 @@ async function getAllInterviewReports(req, res) {
 
 async function generateResumePDF(req, res) {
   const {interviewReportId}=req.params;
-  const interviewReport = await InterviewReportModel.findById(interviewReportId);
+  const interviewReport = await InterviewReportModel.findById(interviewReportId).populate('user');
   if(!interviewReport){
     return res.status(404).json({ success: false, message: "Interview report not found" });
   }
-  const {resume,jobDescription,selfDescription}=interviewReport;
-  const resumePDFBuffer = await generateResumePDFAI(resume,jobDescription,selfDescription);
+  const {resume,jobDescription,selfDescription, user}=interviewReport;
+  const resumePDFBuffer = await generateResumePDFAI(resume,jobDescription,selfDescription, user);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=resume.pdf");
   res.send(resumePDFBuffer);

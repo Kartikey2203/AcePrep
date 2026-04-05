@@ -134,7 +134,7 @@ async function generatePdfFromHtml(htmlContent){
     return pdf;
 }
 
-async function generateResumePDF(resume,selfDescription,jobDescription){
+async function generateResumePDF(resume,selfDescription,jobDescription, userInfo){
     
   const resumepdfSchema = z.object({ 
     html: z.string().describe("the html content of the resume which can be converted to pdf using puppeteer") 
@@ -142,6 +142,7 @@ async function generateResumePDF(resume,selfDescription,jobDescription){
 
   const promptText = `Generate a resume in HTML format based on the following information:
 
+${userInfo ? `CONTACT INFORMATION:\nMake sure to explicitly include the candidate's Contact Information clearly integrated at the top of the resume:\nName: ${userInfo.username}\nEmail: ${userInfo.email}\n` : ""}
 ${resume ? `CANDIDATE RESUME:\n${resume}\n` : `(A candidate resume document is attached to this prompt.)\n`}
 CANDIDATE SELF-DESCRIPTION:
 ${selfDescription}

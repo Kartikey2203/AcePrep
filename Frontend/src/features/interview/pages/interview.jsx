@@ -210,27 +210,6 @@ const Interview = () => {
             <p className="score-label">Strong match for this role</p>
           </div>
 
-          <div className="panel-card match-card">
-            <h3 className="panel-label">ATS Score</h3>
-            <div className="score-ring-wrapper">
-              <div
-                className="score-ring"
-                style={{
-                  background: `conic-gradient(#00a69c 0 ${report?.atsScore || 0}%, rgba(255,255,255,0.08) ${report?.atsScore || 0}% 100%)`,
-                  boxShadow: '0 0 24px rgba(0, 166, 156, 0.4)'
-                }}
-              >
-                <div className="ring-inner">
-                  <span className="score-number">
-                    {report?.atsScore || 0}
-                    <em>%</em>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <p className="score-label" style={{ color: '#00a69c' }}>Resume ATS Compatibility</p>
-          </div>
-
           <div className="panel-card gaps-card">
             <h3 className="panel-label">Skill Gaps</h3>
             <ul className="gap-list">

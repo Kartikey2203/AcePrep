@@ -1,11 +1,13 @@
 import React from 'react'
 import '../style/style.scss'
 import { useInterview } from '../hooks/useInterview'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 
 const Home = () => {
   const {generateReport,loading,reports,getAllReports} = useInterview();
+  const {user, handleLogout} = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
@@ -82,6 +84,14 @@ const Home = () => {
   }
   return (
     <main className='home'>
+      <div className="top-right-auth">
+        {user ? (
+          <button onClick={handleLogout} className="auth-action-btn logout">Logout</button>
+        ) : (
+          <button onClick={() => navigate('/login')} className="auth-action-btn login">Login</button>
+        )}
+      </div>
+
       <div className="card">
 
         <div className="card-header">

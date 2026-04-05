@@ -24,6 +24,46 @@
         z-index: 0;
     }
 
+    // ── Auth Button (Top Right side) ─────────────────────────────
+    .top-right-auth {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        z-index: 50;
+
+        .auth-action-btn {
+            background: rgba(163, 188, 249, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(163, 188, 249, 0.2);
+            border-radius: 30px; 
+            padding: 10px 24px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+            &:hover {
+                background: rgba(163, 188, 249, 0.2);
+                border-color: rgba(163, 188, 249, 0.4);
+                transform: translateY(-2px);
+            }
+
+            &.logout {
+                color: #ff82a0;
+                border-color: rgba(255, 130, 160, 0.3);
+                background: rgba(209, 17, 73, 0.05);
+
+                &:hover {
+                    background: rgba(209, 17, 73, 0.15);
+                    border-color: rgba(255, 130, 160, 0.5);
+                }
+            }
+        }
+    }
+
     // ── Past Reports Dropdown (Bottom Right side) ─────────────────────────────
     .past-reports-container {
         position: fixed;
